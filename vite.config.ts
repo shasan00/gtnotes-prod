@@ -14,10 +14,14 @@ export default defineConfig(() => ({
       },
     },
   },
-  plugins: [ react()],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  // Add this build configuration
+  build: {
+    outDir: path.resolve(__dirname, "../dist"),
   },
 }));
