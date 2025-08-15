@@ -15,10 +15,10 @@
       "noUnusedParameters": false,
       "noImplicitAny": false,
       "noFallthroughCasesInSwitch": false,
-      "baseUrl": "./",
+      "baseUrl": ".",
       "paths": {
         "@/*": ["./*"]
       }
     },
-    "include": ["**/*.ts", "**/*.tsx"]
+    "include": ["./"]
   }
