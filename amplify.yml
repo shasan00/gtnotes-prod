@@ -1,6 +1,7 @@
 version: 1
 applications:
   - appRoot: .
+    name: gtnotes-prod
     frontend:
       phases:
         preBuild:
