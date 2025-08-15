@@ -22,6 +22,6 @@ export default defineConfig(() => ({
   },
   // Add this build configuration
   build: {
-    outDir: path.resolve(__dirname, "../dist"),
+    outDir: "dist", // Outputs to the 'dist' folder at the project root
   },
 }));
