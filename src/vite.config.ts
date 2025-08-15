@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig(() => ({
   server: {
@@ -14,12 +15,7 @@ export default defineConfig(() => ({
       },
     },
   },
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./"),
-    },
-  },
+  plugins: [react(), tsconfigPaths()],
   // Add this build configuration
   build: {
     outDir: "dist", // Outputs to the 'dist' folder at the project root
