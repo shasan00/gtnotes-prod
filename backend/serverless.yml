@@ -6,7 +6,7 @@ provider:
   name: aws
   runtime: nodejs20.x
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'us-east-2'}
   environment:
     NODE_ENV: ${self:provider.stage}
     DATABASE_URL: ${env:DATABASE_URL, ''}
@@ -17,7 +17,15 @@ provider:
     MICROSOFT_CLIENT_ID: ${env:MICROSOFT_CLIENT_ID, ''}
     MICROSOFT_CLIENT_SECRET: ${env:MICROSOFT_CLIENT_SECRET, ''}
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, 'dev-bucket'}
-    AWS_REGION: ${env:AWS_REGION, 'us-east-1'}
+    MICROSOFT_TENANT_ID: ${env:MICROSOFT_TENANT_ID, ''}
+    MICROSOFT_REDIRECT_URI: ${env:MICROSOFT_REDIRECT_URI, ''}
+  vpc:
+    securityGroupIds:
+      - sg-0ac0c57dc09c71bc0
+    subnetIds:
+      - subnet-0caa5c85eb6de0ae8
+      - subnet-0af07f950c9e16d66
+      - subnet-01c07ae91d3a72b23
   iam:
     role:
       statements:
@@ -36,12 +44,13 @@ functions:
           path: /{proxy+}
           method: ANY
           cors: true
-    timeout: 30
-    memorySize: 512
+    timeout: 60
+    memorySize: 1024
 
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
+  - serverless-dotenv-plugin
 
 custom:
   typescript:
@@ -49,3 +58,13 @@ custom:
   serverless-offline:
     httpPort: 4000
     noPrependStageInUrl: true
+  dotenv:
+    exclude:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION
+      - RDS_CA_BASE64
+
+package:
+  patterns:
+    - 'src/db/us-east-2-bundle.pem'

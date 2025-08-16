@@ -7,20 +7,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-// No traditional inputs; Google OAuth only
+import { signInWithGoogle, signInWithMicrosoft } from "@/lib/auth"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  // Traditional login removed; only Google OAuth
-
-  const handleGoogleClick = () => {
-    window.location.href = "/api/auth/google/login";
+  const handleGoogleClick = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Google sign in failed:", error);
+    }
   };
 
-  const handleMicrosoftClick = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/microsoft/login`;
+  const handleMicrosoftClick = async () => {
+    try {
+      await signInWithMicrosoft();
+    } catch (error) {
+      console.error("Microsoft sign in failed:", error);
+    }
   };
 
   return (
@@ -33,7 +39,6 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={(e) => e.preventDefault()}>
             <div className="grid gap-6">
-              {/* Divider removed since only Google is supported */}
               <div className="grid gap-6">
                 <div className="text-sm text-muted-foreground text-center">
                   Sign in is available via Google or Microsoft.
@@ -41,7 +46,7 @@ export function LoginForm({
                 <button
                   type="button"
                   className="gsi-material-button w-full bg-gt-gold text-gt-gold-foreground hover:bg-yellow-600"
-                  onClick={() => (window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google/login`)}
+                  onClick={handleGoogleClick}
                 >
                   <div className="gsi-material-button-state"></div>
                   <div className="gsi-material-button-content-wrapper">
@@ -76,7 +81,6 @@ export function LoginForm({
                   </div>
                 </button>
               </div>
-              {/* Registration via email/password deprecated */}
             </div>
           </form>
         </CardContent>

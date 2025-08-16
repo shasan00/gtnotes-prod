@@ -6,6 +6,7 @@ import { Search, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSearchFilter } from "@/context/SearchFilterContext";
 import { useDebounce } from "@/hooks/useDebounce";
+import { getSession, signOut } from "@/lib/auth";
 
 const Header = () => {
   const { searchQuery, setSearchQuery } = useSearchFilter();
@@ -135,49 +136,79 @@ export default Header;
 function AuthButtons() {
   const [isAuthed, setIsAuthed] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      setIsAuthed(true);
+    const checkAuth = async () => {
       try {
-        const base64Url = token.split(".")[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const padded = base64 + "===".slice((base64.length + 3) % 4);
-        const payload = JSON.parse(atob(padded));
-        setIsAdmin(payload?.role === "admin");
-      } catch {
+        const session = await getSession();
+        if (session) {
+          setIsAuthed(true);
+          setUser(session.user);
+          setIsAdmin(session.user?.role === "admin");
+        } else {
+          setIsAuthed(false);
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        setIsAuthed(false);
+        setUser(null);
         setIsAdmin(false);
       }
-    } else {
-      setIsAuthed(false);
-      setIsAdmin(false);
-    }
+    };
+
+    checkAuth();
+    
+    // Check auth status periodically
+    const interval = setInterval(checkAuth, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsAuthed(false);
+      setUser(null);
+      setIsAdmin(false);
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    }
+  };
+
   if (isAuthed) {
-return (
-  <div className="flex items-center space-x-2">
-    {isAdmin && (
-      <Button
-        asChild
-        className="bg-emerald-600 text-white hover:bg-emerald-700"
-      >
-        <Link to="/admin">Admin</Link>
-      </Button>
-    )}
-    <Button
-      asChild
-      className="bg-gt-gold text-gt-gold-foreground hover:bg-gt-gold/90"
-    >
-      <Link to="/profile">Profile</Link>
+    return (
+      <div className="flex items-center space-x-2">
+        {isAdmin && (
+          <Button
+            asChild
+            className="bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            <Link to="/admin">Admin</Link>
+          </Button>
+        )}
+        <Button
+          asChild
+          className="bg-gt-gold text-gt-gold-foreground hover:bg-gt-gold/90"
+        >
+          <Link to="/profile">Profile</Link>
+        </Button>
+        <Button
+          onClick={handleSignOut}
+          variant="outline"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          Sign Out
+        </Button>
+      </div>
+    );
+  }
+  
+  return (
+    <Button className="bg-gt-gold text-gt-gold-foreground hover:bg-gt-gold/90">
+      <Link to="/sign-in">Sign In</Link>
     </Button>
-  </div>
-);
-}
-return (
-  <Button className="bg-gt-gold text-gt-gold-foreground hover:bg-gt-gold/90">
-    <Link to="/sign-in">Sign In</Link>
-  </Button>
-);
+  );
 }

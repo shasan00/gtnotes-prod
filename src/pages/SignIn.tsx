@@ -1,20 +1,25 @@
 import React from "react";
 import { NotebookPen } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import { LoginForm } from "@/components/Login-form";
-import Header  from "@/components/Header";
+import Header from "@/components/Header";
+import { getSession } from "@/lib/auth";
 
 export default function LoginPage() {
-  // hands token returned from OAuth callback redirect (might change idk)
+  const navigate = useNavigate();
+
+  // Check if user is already authenticated
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    if (token) {
-      localStorage.setItem("auth_token", token);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      window.location.href = "/";
-    }
-  }, []);
+    const checkAuth = async () => {
+      const session = await getSession();
+      if (session) {
+        // User is already authenticated, redirect to home
+        navigate("/");
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   return (
     <>

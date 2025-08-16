@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import { Buffer } from "buffer";
+import * as fs from "fs"; // Add this line
 
 let pool: Pool | null = null;
 
@@ -7,9 +8,22 @@ export function getPool(): Pool {
   if (!pool) {
     if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
 
-    const sslConfig = process.env.RDS_CA_BASE64
-      ? { ca: Buffer.from(process.env.RDS_CA_BASE64, "base64").toString("utf-8") }
-      : {  require: true, rejectUnauthorized: false }; // dev: force SSL, ignore self-signed
+    let sslConfig: { rejectUnauthorized: boolean; ca?: string; require?: boolean };
+
+    if (process.env.NODE_ENV === "production") {
+      // In production, read the CA certificate from the bundled file
+      const ca = fs.readFileSync(__dirname + "/us-east-2-bundle.pem").toString();
+      sslConfig = {
+        ca: ca,
+        rejectUnauthorized: true, // Ensure strict SSL validation in production
+      };
+    } else {
+      // In development, allow self-signed certs or no cert
+      sslConfig = {
+        require: true,
+        rejectUnauthorized: false,
+      };
+    }
 
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
