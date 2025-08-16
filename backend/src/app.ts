@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import { toNodeHandler } from "better-auth/node";
 import authRouter from "./routes/auth";
 import usersRouter from "./routes/users";
 import notesRouter from "./routes/notes";
@@ -70,10 +71,15 @@ app.use(cors(corsOptions));
 // Handle preflight requests
 app.options('*', cors(corsOptions));
 
+// IMPORTANT: Mount Better Auth handler BEFORE express.json() middleware
+// This prevents the "pending" issue mentioned in the docs
+app.all("/api/auth/*", toNodeHandler(auth));
+
+// NOW mount express middleware AFTER Better Auth handler
 app.use(express.json());
 app.use(cookieParser());
 
-// Test database connection before mounting Better Auth
+// Test database connection
 app.get("/api/test-db", async (_req, res) => {
   try {
     const { getPool } = await import("./db/pool");
@@ -91,30 +97,6 @@ app.get("/api/test-db", async (_req, res) => {
       error: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()
     });
-  }
-});
-
-// Better Auth middleware with explicit CORS and error handling
-app.use("/api/auth", cors(corsOptions), async (req, res, next) => {
-  try {
-    console.log("Better Auth request:", req.method, req.path);
-    const response = await auth.handler(req);
-    
-    // Handle the response from Better Auth
-    if (response) {
-      // Copy headers from Better Auth response
-      Object.entries(response.headers).forEach(([key, value]) => {
-        res.setHeader(key, value);
-      });
-      
-      // Set status and send response
-      res.status(response.status).send(response.body);
-    } else {
-      next();
-    }
-  } catch (error) {
-    console.error("Better Auth handler error:", error);
-    res.status(500).json({ error: "Better Auth handler failed" });
   }
 });
 
