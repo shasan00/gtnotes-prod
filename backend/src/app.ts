@@ -82,20 +82,67 @@ app.use(cookieParser());
 // Test database connection
 app.get("/api/test-db", async (_req, res) => {
   try {
+    console.log("Testing database connection...");
     const { getPool } = await import("./db/pool");
     const pool = getPool();
-    const result = await pool.query("SELECT 1 as test");
+    
+    console.log("Pool created, testing query...");
+    const result = await pool.query("SELECT 1 as test, NOW() as timestamp");
+    
+    console.log("Query successful:", result.rows[0]);
     res.json({ 
       status: "Database connection successful", 
       result: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      message: "Database is accessible from Lambda"
     });
   } catch (error) {
     console.error("Database test failed:", error);
+    
+    // Provide more detailed error information
+    let errorDetails = "Unknown error";
+    if (error instanceof Error) {
+      errorDetails = error.message;
+      if (error.cause) {
+        errorDetails += ` (Cause: ${error.cause})`;
+      }
+    }
+    
     res.status(500).json({ 
       status: "Database connection failed", 
-      error: error instanceof Error ? error.message : String(error),
-      timestamp: new Date().toISOString()
+      error: errorDetails,
+      timestamp: new Date().toISOString(),
+      message: "Check VPC, security groups, and database accessibility"
+    });
+  }
+});
+
+// Test Better Auth initialization separately
+app.get("/api/test-auth", async (_req, res) => {
+  try {
+    console.log("Testing Better Auth initialization...");
+    
+    // Test if auth object can be created without database connection
+    const { auth } = await import("./auth");
+    
+    res.json({ 
+      status: "Better Auth initialization successful", 
+      timestamp: new Date().toISOString(),
+      message: "Better Auth object created successfully"
+    });
+  } catch (error) {
+    console.error("Better Auth test failed:", error);
+    
+    let errorDetails = "Unknown error";
+    if (error instanceof Error) {
+      errorDetails = error.message;
+    }
+    
+    res.status(500).json({ 
+      status: "Better Auth initialization failed", 
+      error: errorDetails,
+      timestamp: new Date().toISOString(),
+      message: "Better Auth configuration issue"
     });
   }
 });
