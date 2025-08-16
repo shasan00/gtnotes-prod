@@ -12,6 +12,8 @@ import NoteDetail from "./pages/NoteDetail";
 import UploadPage from "./pages/UploadPage";
 import Profile from "./pages/Profile";
 import Admin from "@/pages/Admin";
+import { createContext, useContext, useEffect, useState } from "react";
+import { getSession } from "@/lib/auth";
 
 const queryClient = new QueryClient();
 
@@ -42,9 +44,42 @@ const App = () => (
 
 export default App;
 
+function useAuthState() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  useEffect(() => {
+    const run = async () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      if (token) {
+        setIsAuthed(true);
+        setIsLoading(false);
+        return;
+      }
+      const session = await getSession();
+      if (session) {
+        // Try to exchange for API token
+        const resp = await fetch("/api/session/me", { credentials: "include" });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data?.token) {
+            localStorage.setItem("auth_token", data.token);
+            setIsAuthed(true);
+          }
+        }
+      }
+      setIsLoading(false);
+    };
+    run();
+  }, []);
+
+  return { isLoading, isAuthed };
+}
+
 function Protected({ children }: { children: React.ReactNode }) {
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  if (!token) {
+  const { isLoading, isAuthed } = useAuthState();
+  if (isLoading) return null;
+  if (!isAuthed) {
     window.location.href = "/sign-in";
     return null;
   }
@@ -52,12 +87,15 @@ function Protected({ children }: { children: React.ReactNode }) {
 }
 
 function AdminProtected({ children }: { children: React.ReactNode }) {
-  const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-  if (!token) {
+  const { isLoading, isAuthed } = useAuthState();
+  if (isLoading) return null;
+  if (!isAuthed) {
     window.location.href = "/sign-in";
     return null;
   }
   try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) throw new Error("missing token");
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64 + "===".slice((base64.length + 3) % 4);

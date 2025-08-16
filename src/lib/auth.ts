@@ -11,7 +11,8 @@ export const authClient = createAuthClient({
 export const signInWithGoogle = async () => {
   try {
     const data = await authClient.signIn.social({
-      provider: "google"
+      provider: "google",
+      callbackURL: "/sign-in?success=true",
     });
     return data;
   } catch (error) {
@@ -23,7 +24,8 @@ export const signInWithGoogle = async () => {
 export const signInWithMicrosoft = async () => {
   try {
     const data = await authClient.signIn.social({
-      provider: "microsoft"
+      provider: "microsoft",
+      callbackURL: "/sign-in?success=true",
     });
     return data;
   } catch (error) {
@@ -38,6 +40,16 @@ export const signOut = async () => {
   } catch (error) {
     console.error("Sign out error:", error);
     throw error;
+  }
+};
+
+export const fullSignOut = async () => {
+  try {
+    await signOut();
+  } finally {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+    }
   }
 };
 

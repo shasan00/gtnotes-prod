@@ -10,65 +10,53 @@ function createJwt(userId: string, role: string): string {
   return jwt.sign({ sub: userId, role }, secret, { expiresIn: "7d" });
 }
 
-// Better Auth handles the OAuth flow, so we just need to handle the callback
-// and create our JWT token for the frontend
-
-// Google OAuth callback - Better Auth will handle the OAuth flow
-router.get("/google/callback", async (req, res) => {
+// Get current user session
+router.get("/me", async (req, res) => {
   try {
-    // Better Auth will have processed the OAuth callback
-    // We need to get the user from the session or token
-    const user = req.user || req.session?.user;
+    const session = await auth.api.getSession(req);
     
-    if (!user) {
-      return res.redirect("/api/auth/google/failure");
+    if (!session) {
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
-    const token = createJwt(user.id, user.role);
-    const redirectUrl = process.env.GOOGLE_SUCCESS_REDIRECT || "http://localhost:8080/sign-in?token=" + encodeURIComponent(token);
+    // Create JWT token for frontend
+    const token = createJwt(session.user.id, session.user.role);
     
-    if (redirectUrl.includes("?")) {
-      res.redirect(redirectUrl + (redirectUrl.endsWith("?") ? "" : "&") + "token=" + encodeURIComponent(token));
-    } else {
-      res.redirect(redirectUrl + "?token=" + encodeURIComponent(token));
-    }
+    res.json({
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        firstName: session.user.firstName,
+        lastName: session.user.lastName,
+        role: session.user.role,
+      },
+      token
+    });
   } catch (error) {
-    console.error("Google callback error:", error);
-    res.redirect("/api/auth/google/failure");
+    console.error("Get session error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.get("/google/failure", (_req, res) => {
-  res.status(401).json({ error: "Google authentication failed" });
-});
-
-// Microsoft OAuth callback - Better Auth will handle the OAuth flow
-router.get("/microsoft/callback", async (req, res) => {
+// Sign out
+router.post("/signout", async (req, res) => {
   try {
-    // Better Auth will have processed the OAuth callback
-    // We need to get the user from the session or token
-    const user = req.user || req.session?.user;
-    
-    if (!user) {
-      return res.redirect("/api/auth/microsoft/failure");
-    }
-
-    const token = createJwt(user.id, user.role);
-    const redirectUrl = process.env.MICROSOFT_SUCCESS_REDIRECT || "http://localhost:8080/sign-in?token=" + encodeURIComponent(token);
-    
-    if (redirectUrl.includes("?")) {
-      res.redirect(redirectUrl + (redirectUrl.endsWith("?") ? "" : "&") + "token=" + encodeURIComponent(token));
-    } else {
-      res.redirect(redirectUrl + "?token=" + encodeURIComponent(token));
-    }
+    await auth.api.signOut(req, res);
+    res.json({ success: true });
   } catch (error) {
-    console.error("Microsoft callback error:", error);
-    res.redirect("/api/auth/microsoft/failure");
+    console.error("Sign out error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-router.get("/microsoft/failure", (_req, res) => {
-  res.status(401).json({ error: "Microsoft authentication failed" });
+// Get OAuth URLs for frontend
+router.get("/providers", (_req, res) => {
+  const baseUrl = process.env.BACKEND_URL || "http://localhost:3000";
+  
+  res.json({
+    google: `${baseUrl}/api/auth/signin/google`,
+    microsoft: `${baseUrl}/api/auth/signin/microsoft`,
+  });
 });
 
 export default router;

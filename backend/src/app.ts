@@ -16,14 +16,17 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Better Auth middleware
+// Better Auth middleware - this handles all OAuth flows automatically
 app.use("/api/auth", auth.handler());
+
+// Session helper routes (non-conflicting)
+app.use("/api/session", authRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/api/auth", authRouter);
+// Custom routes for user management and notes
 app.use("/api/users", usersRouter);
 app.use("/api/notes", notesRouter);
 

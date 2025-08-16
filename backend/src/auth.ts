@@ -141,5 +141,14 @@ export const auth = betterAuth({
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Handle redirects after successful OAuth
+      if (url.startsWith(baseUrl)) {
+        // If the URL is relative to our base, redirect to frontend with token
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:8080";
+        return `${frontendUrl}/sign-in?success=true`;
+      }
+      return url;
+    },
   },
 });

@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { fullSignOut } from "@/lib/auth";
 
 interface User {
   first_name: string;
@@ -80,7 +81,7 @@ const Profile = () => {
         throw new Error('Failed to delete account');
       }
 
-      localStorage.removeItem('auth_token');
+      await fullSignOut();
       window.location.href = '/sign-in'; // redirects back to signin
     } catch (err: any) {
       setError(err.message);
@@ -161,8 +162,8 @@ const Profile = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button variant="outline" className="w-full mt-2" onClick={() => {
-              localStorage.removeItem('auth_token');
+            <Button variant="outline" className="w-full mt-2" onClick={async () => {
+              await fullSignOut();
               window.location.href = '/sign-in';
             }}>
               Logout
