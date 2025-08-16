@@ -20,7 +20,7 @@ export function LoginForm({
   };
 
   const handleMicrosoftClick = () => {
-    window.location.href = "/api/auth/microsoft/login";
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/microsoft/login`;
   };
 
   return (
@@ -41,7 +41,7 @@ export function LoginForm({
                 <button
                   type="button"
                   className="gsi-material-button w-full bg-gt-gold text-gt-gold-foreground hover:bg-yellow-600"
-                  onClick={handleGoogleClick}
+                  onClick={() => (window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google/login`)}
                 >
                   <div className="gsi-material-button-state"></div>
                   <div className="gsi-material-button-content-wrapper">
