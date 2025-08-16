@@ -5,6 +5,8 @@ import { LoginForm } from "@/components/Login-form";
 import Header from "@/components/Header";
 import { getSession } from "@/lib/auth";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,7 +20,7 @@ export default function LoginPage() {
       try {
         const session = await getSession();
         if (session) {
-          const resp = await fetch("/api/session/me", { credentials: "include" });
+          const resp = await fetch(`${API_BASE_URL}/api/session/me`, { credentials: "include" });
           if (resp.ok) {
             const data = await resp.json();
             if (data?.token) {
@@ -49,7 +51,7 @@ export default function LoginPage() {
       const session = await getSession();
       if (session) {
         // Try to exchange for API token if not stored yet
-        const resp = await fetch("/api/session/me", { credentials: "include" });
+        const resp = await fetch(`${API_BASE_URL}/api/session/me`, { credentials: "include" });
         if (resp.ok) {
           const data = await resp.json();
           if (data?.token) {

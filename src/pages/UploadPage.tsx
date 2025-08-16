@@ -16,6 +16,8 @@ import {
   type ValidationResult 
 } from "@/utils/validation";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -247,7 +249,7 @@ export default function UploadPage() {
         throw new Error('Authentication required. Please sign in again.');
       }
 
-      const response = await fetch('/api/notes/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/notes/upload`, {
         method: 'POST',
         body: formDataToSend,
         headers: {

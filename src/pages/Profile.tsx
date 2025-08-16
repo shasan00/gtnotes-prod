@@ -23,6 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { fullSignOut } from "@/lib/auth";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 interface User {
   first_name: string;
   last_name: string;
@@ -42,10 +44,11 @@ const Profile = () => {
           return;
         }
 
-        const response = await fetch('/api/users/me', {
+        const response = await fetch(`${API_BASE_URL}/api/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: 'include',
         });
 
         if (!response.ok) {
@@ -70,11 +73,12 @@ const Profile = () => {
         return;
       }
 
-      const response = await fetch('/api/users/me', {
+      const response = await fetch(`${API_BASE_URL}/api/users/me`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {

@@ -19,6 +19,7 @@ provider:
     AWS_S3_BUCKET: ${env:AWS_S3_BUCKET, 'dev-bucket'}
     MICROSOFT_TENANT_ID: ${env:MICROSOFT_TENANT_ID, ''}
     MICROSOFT_REDIRECT_URI: ${env:MICROSOFT_REDIRECT_URI, ''}
+    FRONTEND_URL: ${env:FRONTEND_URL, 'http://localhost:8080'}
   vpc:
     securityGroupIds:
       - sg-0ac0c57dc09c71bc0
@@ -43,7 +44,20 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
-          cors: true
+          cors:
+            origins:
+              - ${env:FRONTEND_URL, 'http://localhost:8080'}
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Requested-With
+              - Accept
+              - Origin
+              - Referer
+              - User-Agent
+              - Accept-Language
+              - Content-Language
+            allowCredentials: true
     timeout: 60
     memorySize: 1024
 
