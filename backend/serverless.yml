@@ -10,6 +10,8 @@ provider:
   environment:
     NODE_ENV: ${self:provider.stage}
     DATABASE_URL: ${env:DATABASE_URL, ''}
+    BETTER_AUTH_SECRET: ${env:BETTER_AUTH_SECRET, ''}
+    BETTER_AUTH_URL: ${env:BETTER_AUTH_URL, 'https://7m66fwf69g.execute-api.us-east-2.amazonaws.com/production'}
     JWT_SECRET: ${env:JWT_SECRET, 'dev-jwt-secret'}
     SESSION_SECRET: ${env:SESSION_SECRET, 'dev-session-secret'}
     GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID, ''}
@@ -47,6 +49,8 @@ functions:
           cors:
             origins:
               - ${env:FRONTEND_URL, 'http://localhost:8080'}
+              - 'https://main.d2rs71o2mqiojg.amplifyapp.com'
+              - 'https://d2rs71o2mqiojg.amplifyapp.com'
             headers:
               - Content-Type
               - Authorization

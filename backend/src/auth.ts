@@ -2,66 +2,100 @@ import { betterAuth } from "better-auth";
 import { getPool } from "./db/pool";
 
 export const auth = betterAuth({
+  // Required Better Auth configuration
+  secret: process.env.BETTER_AUTH_SECRET!,
+  baseURL: process.env.BETTER_AUTH_URL!,
+  
   database: {
     type: "custom",
     async getUser(id: string) {
-      const pool = getPool();
-      const result = await pool.query(
-        "SELECT id, email, first_name, last_name, role FROM users WHERE id = $1",
-        [id]
-      );
-      return result.rows[0] || null;
+      try {
+        const pool = getPool();
+        const result = await pool.query(
+          "SELECT id, email, first_name, last_name, role FROM users WHERE id = $1",
+          [id]
+        );
+        return result.rows[0] || null;
+      } catch (error) {
+        console.error("Error in getUser:", error);
+        throw error;
+      }
     },
     async getUserByEmail(email: string) {
-      const pool = getPool();
-      const result = await pool.query(
-        "SELECT id, email, first_name, last_name, role FROM users WHERE email = $1",
-        [email]
-      );
-      return result.rows[0] || null;
+      try {
+        const pool = getPool();
+        const result = await pool.query(
+          "SELECT id, email, first_name, last_name, role FROM users WHERE email = $1",
+          [email]
+        );
+        return result.rows[0] || null;
+      } catch (error) {
+        console.error("Error in getUserByEmail:", error);
+        throw error;
+      }
     },
     async createUser(data: any) {
-      const pool = getPool();
-      const result = await pool.query(
-        "INSERT INTO users (email, first_name, last_name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role",
-        [data.email, data.firstName, data.lastName, 'user']
-      );
-      return result.rows[0];
+      try {
+        const pool = getPool();
+        const result = await pool.query(
+          "INSERT INTO users (email, first_name, last_name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name, role",
+          [data.email, data.firstName, data.lastName, 'user']
+        );
+        return result.rows[0];
+      } catch (error) {
+        console.error("Error in createUser:", error);
+        throw error;
+      }
     },
     async updateUser(id: string, data: any) {
-      const pool = getPool();
-      const result = await pool.query(
-        "UPDATE users SET email = $1, first_name = $2, last_name = $3, updated_at = NOW() WHERE id = $4 RETURNING id, email, first_name, last_name, role",
-        [data.email, data.firstName, data.lastName, id]
-      );
-      return result.rows[0];
+      try {
+        const pool = getPool();
+        const result = await pool.query(
+          "UPDATE users SET email = $1, first_name = $2, last_name = $3, updated_at = NOW() WHERE id = $4 RETURNING id, email, first_name, last_name, role",
+          [data.email, data.firstName, data.lastName, id]
+        );
+        return result.rows[0];
+      } catch (error) {
+        console.error("Error in updateUser:", error);
+        throw error;
+      }
     },
     async linkAccount(data: any) {
-      const pool = getPool();
-      if (data.provider === 'google') {
-        await pool.query(
-          "UPDATE users SET google_id = $1, updated_at = NOW() WHERE id = $2",
-          [data.providerAccountId, data.userId]
-        );
-      } else if (data.provider === 'microsoft') {
-        await pool.query(
-          "UPDATE users SET microsoft_id = $1, updated_at = NOW() WHERE id = $2",
-          [data.providerAccountId, data.userId]
-        );
+      try {
+        const pool = getPool();
+        if (data.provider === 'google') {
+          await pool.query(
+            "UPDATE users SET google_id = $1, updated_at = NOW() WHERE id = $2",
+            [data.providerAccountId, data.userId]
+          );
+        } else if (data.provider === 'microsoft') {
+          await pool.query(
+            "UPDATE users SET microsoft_id = $1, updated_at = NOW() WHERE id = $2",
+            [data.providerAccountId, data.userId]
+          );
+        }
+      } catch (error) {
+        console.error("Error in linkAccount:", error);
+        throw error;
       }
     },
     async unlinkAccount(provider: string, providerAccountId: string) {
-      const pool = getPool();
-      if (provider === 'google') {
-        await pool.query(
-          "UPDATE users SET google_id = NULL, updated_at = NOW() WHERE google_id = $1",
-          [providerAccountId]
-        );
-      } else if (provider === 'microsoft') {
-        await pool.query(
-          "UPDATE users SET microsoft_id = NULL, updated_at = NOW() WHERE microsoft_id = $1",
-          [providerAccountId]
-        );
+      try {
+        const pool = getPool();
+        if (provider === 'google') {
+          await pool.query(
+            "UPDATE users SET google_id = NULL, updated_at = NOW() WHERE google_id = $1",
+            [providerAccountId]
+          );
+        } else if (provider === 'microsoft') {
+          await pool.query(
+            "UPDATE users SET microsoft_id = NULL, updated_at = NOW() WHERE microsoft_id = $1",
+            [providerAccountId]
+          );
+        }
+      } catch (error) {
+        console.error("Error in unlinkAccount:", error);
+        throw error;
       }
     },
     async getSession(sessionToken: string) {
@@ -89,12 +123,13 @@ export const auth = betterAuth({
       return null;
     }
   },
+  
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       accessType: "offline",
-      prompt: "select_account consent",
+      prompt: "select_account+consent",
     },
     microsoft: {
       clientId: process.env.MICROSOFT_CLIENT_ID as string,
@@ -103,15 +138,11 @@ export const auth = betterAuth({
       prompt: "select_account",
     },
   },
-  session: {
-    strategy: "jwt",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  },
   jwt: {
     secret: process.env.JWT_SECRET as string,
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
       if (account?.provider === 'google' && profile) {
         // Handle Google profile data
         const googleProfile = profile as any;
@@ -127,21 +158,21 @@ export const auth = betterAuth({
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: { token: any; user: any; account: any }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Handle redirects after successful OAuth
       if (url.startsWith(baseUrl)) {
         // If the URL is relative to our base, redirect to frontend with token
