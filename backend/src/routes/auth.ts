@@ -51,7 +51,7 @@ router.post("/signout", async (req, res) => {
 
 // Get OAuth URLs for frontend
 router.get("/providers", (_req, res) => {
-  const baseUrl = process.env.BACKEND_URL || "http://localhost:3000";
+  const baseUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
   
   res.json({
     google: `${baseUrl}/api/auth/signin/google`,

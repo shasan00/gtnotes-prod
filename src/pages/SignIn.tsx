@@ -20,14 +20,11 @@ export default function LoginPage() {
       try {
         const session = await getSession();
         if (session) {
-          const resp = await fetch(`${API_BASE_URL}/api/session/me`, { credentials: "include" });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data?.token) {
-              localStorage.setItem("auth_token", data.token);
-              navigate("/");
-              return;
-            }
+          // The session now includes the JWT token directly
+          if (session?.token) {
+            localStorage.setItem("auth_token", session.token);
+            navigate("/");
+            return;
           }
         }
       } catch (e) {
@@ -50,14 +47,10 @@ export default function LoginPage() {
       }
       const session = await getSession();
       if (session) {
-        // Try to exchange for API token if not stored yet
-        const resp = await fetch(`${API_BASE_URL}/api/session/me`, { credentials: "include" });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data?.token) {
-            localStorage.setItem("auth_token", data.token);
-            navigate("/");
-          }
+        // The session now includes the JWT token directly
+        if (session?.token) {
+          localStorage.setItem("auth_token", session.token);
+          navigate("/");
         }
       }
     };

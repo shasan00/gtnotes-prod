@@ -58,14 +58,10 @@ function useAuthState() {
       }
       const session = await getSession();
       if (session) {
-        // Try to exchange for API token
-        const resp = await fetch("/api/session/me", { credentials: "include" });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data?.token) {
-            localStorage.setItem("auth_token", data.token);
-            setIsAuthed(true);
-          }
+        // The session now includes the JWT token directly
+        if (session?.token) {
+          localStorage.setItem("auth_token", session.token);
+          setIsAuthed(true);
         }
       }
       setIsLoading(false);
